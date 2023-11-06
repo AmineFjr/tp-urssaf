@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\Api\SearchCompanyApi;
+use App\Service\StockJson;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use OpenApi\Attributes as OA;
@@ -30,7 +31,21 @@ class CompanyController extends AbstractController
             $companyName = $data['companyName'];
 
             $response = $searchCompanyApi->searchCompany($companyName);
+
             return $this->json($response, Response::HTTP_OK);
+        } catch (Exception $exception) {
+            return $this->json($exception->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    #[Route('/stock', name: 'stock', methods: ['POST'])]
+    public function stock(Request $request, StockJson $stockJson): Response
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $stockJson->sendDataToTextFile($data);
+
+            return $this->json("les données ont été enregistrées avec success", Response::HTTP_OK);
         } catch (Exception $exception) {
             return $this->json($exception->getMessage(), Response::HTTP_BAD_REQUEST);
         }
