@@ -28,6 +28,7 @@ class CompanyController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
             $companyName = $data['companyName'];
+
             $response = $searchCompanyApi->searchCompany($companyName);
             return $this->json($response, Response::HTTP_OK);
         } catch (Exception $exception) {
