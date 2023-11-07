@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello CompanyController!{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+</style>
+{% block content %}
+    <div class="container">
+        <h1>Résultats de la recherche d'entreprises</h1>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                    </ul>
+                    <form class="form-inline d-flex" method="POST">
+                        {{ form_start(company_form) }}
+                        {{ form_widget(company_form.nomComplet) }}
+                        {{ form_end(company_form) }}
+                    </form>
+
+                </div>
+            </div>
+        </nav>
+
+        {% if response %}
+            <table class="table table-hover mt-5">
+                <thead>
+                <tr>
+                    <th scope="col">Nom Raison Sociale</th>
+                    <th scope="col">Siren</th>
+                    <th scope="col">Siret</th>
+                    <th scope="col">Adresse</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for companyData in response %}
+                    <tr class="table-active" id="{{ companyData.siren }}">
+                        <th scope="row">{{ companyData.nom_raison_sociale }}</th>
+                        <td>{{ companyData.siren }}</td>
+                        <td>{{ companyData.siege['siret'] }}</td>
+                        <td>{{ companyData.siege['adresse'] }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            <script>
+
+                $(document).ready(function(){
+                    $("tbody tr").click(function(){
+                        var siren = $(this).attr('id');
+                        $.ajax({
+                            url: '{{ path('search_company_ajax') }}',
+                            type: 'POST',
+                            data: JSON.stringify({ siren: siren }),
+                            contentType: 'application/json',
+                            success: function(response) {
+
+                            }
+                        });
+                    });
+                });
+            </script>
+        {% endif %}
+
+    </div>
+{% endblock %}
+
+{% endblock %}

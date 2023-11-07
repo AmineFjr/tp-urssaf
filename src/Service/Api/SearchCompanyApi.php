@@ -4,7 +4,7 @@ namespace App\Service\Api;
 
 class SearchCompanyApi
 {
-    public function searchCompany(string $companyName, string $siren)
+    public function searchCompany(string $companyName, string $siren = null)
     {
         if (!is_file('txt/' . $siren . '.txt')) {
             $gouvApi = $_ENV['SEARCH_COMPANY_GOUV_API'] . '?q=' . $companyName;
