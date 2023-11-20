@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('api/search-company', name: 'search_company_')]
+#[Route('api-search-company', name: 'search_company_')]
 #[OA\Tag(name: 'SearchCompany')]
 class CompanyController extends AbstractController
 {
