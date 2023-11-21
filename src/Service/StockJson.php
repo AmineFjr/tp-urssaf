@@ -6,12 +6,19 @@ class StockJson
 {
     public function sendDataToTextFile(array $data): void
     {
-         $siren = $data["Siren"];
-            $fileName = 'txt/' . $siren . '.txt';
-            if (!is_file($fileName))
-                file_put_contents($fileName, json_encode($data));
-
+        $siren = $data["Siren"];
+        $fileName = 'txt/' . $siren . '.txt';
+        if (!is_file($fileName)) {
+            file_put_contents($fileName, json_encode($data));
+        }
     }
+
+    public function fileExist(string $siren): bool
+    {
+        $fileName = 'txt/' . $siren . '.txt';
+        return is_file($fileName);
+    }
+
 
 
     public function getDataFromTextFile(string $siren): array

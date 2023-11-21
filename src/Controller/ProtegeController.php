@@ -9,6 +9,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use OpenApi\Attributes as OA;
 #[Route('api-protege', name: 'protege_')]
@@ -19,9 +21,24 @@ class ProtegeController extends AbstractController
     public function delete(Request $request, StockJson $stockJson, int $siren, SecurityService $securityService): Response
     {
         try {
+            if ($request->getMethod() !== 'DELETE') {
+                throw new MethodNotAllowedHttpException(['DELETE'], 'Method not allowed');
+            }
+
             if (!$securityService->login($request)) {
                 return new JsonResponse("Vous n'êtes pas connectés", Response::HTTP_UNAUTHORIZED);
             }
+            $supportedFormats = ['html', 'json'];
+            $format = $request->getRequestFormat();
+
+            if (!in_array($format, $supportedFormats)) {
+                throw new NotAcceptableHttpException('Format not supported');
+            }
+
+            if (empty($siren)) {
+                return $this->json("Aucune entreprise avec ce SIREN", Response::HTTP_NOT_FOUND);
+            }
+
             $stockJson->deleteDataFromTextFile($siren);
             return $this->json("Entreprise supprimée", Response::HTTP_OK);
         } catch (Exception $exception) {
@@ -36,6 +53,18 @@ class ProtegeController extends AbstractController
             if (!$securityService->login($request)) {
                 return new JsonResponse("Vous n'êtes pas connectés", Response::HTTP_UNAUTHORIZED);
             }
+
+            if ($request->getMethod() !== 'PATCH') {
+                throw new MethodNotAllowedHttpException(['PATCH'], 'Method not allowed');
+            }
+
+            $supportedFormats = ['html', 'json'];
+            $format = $request->getRequestFormat();
+
+            if (!in_array($format, $supportedFormats)) {
+                throw new NotAcceptableHttpException('Format not supported');
+            }
+
             $stockJson->deleteDataFromTextFile($siren);
             $data = json_decode($request->getContent(), true);
             $stockJson->updateDataFromTextFile($data, $siren);
