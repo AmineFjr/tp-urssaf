@@ -27,7 +27,7 @@
                     <tbody>
                     {% for companyData in response.results %}
                         <tr class="table-active" id="{{ companyData.siren }}">
-                            <th scope="row">{{ companyData.nom_raison_sociale }}</th>
+                            <th scope="row"><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.nom_raison_sociale }}</a></th>
                             <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siren }}</a></td>
                             <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siege['siret'] }}</a></td>
                             <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siege['adresse'] }}</a></td>
