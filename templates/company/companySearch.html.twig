@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <div>
+
+        <form action="{{ path('search_company') }}" method="get" class="form-row">
+            <div class="header-search p-5 d-flex flex-row align-items-center flex-fill">
+                <i class="fa-solid fa-magnifying-glass mr-5"></i>
+                <input type="text" id="search" name="search" placeholder="Entrez le nom de l'entreprise" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </form>
+
+
+        <div>
+            {% if response %}
+                <table class="table table-hover mt-5">
+                    <thead>
+                    <tr>
+                        <th scope="col">Nom Raison Sociale</th>
+                        <th scope="col">Siren</th>
+                        <th scope="col">Siret</th>
+                        <th scope="col">Adresse</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for companyData in response.results %}
+                        <tr class="table-active" id="{{ companyData.siren }}">
+                            <th scope="row">{{ companyData.nom_raison_sociale }}</th>
+                            <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siren }}</a></td>
+                            <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siege['siret'] }}</a></td>
+                            <td><a  href="{{ path('selectedCompany', {'id': companyData.siren}) }}">{{ companyData.siege['adresse'] }}</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <div class="pt-20">
+                    <ul class="pagination">
+                        <li class="pagination-item"><a href="{{ path('search_company', {search, page: page > 1 ? page - 1 : 1}) }}"  class="pagination-button">&laquo; Précédent</a></li>
+                        <li class="pagination-item"><a href="{{ path('search_company', {search, page: page + 1}) }}"  class="pagination-button">Suivant &raquo;</a></li>
+                        <p>{{ response.page }} page sur {{ response.total_pages }}</p>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+    "523456789": {
+        "siren": "523456789",
+        "raison_sociale": "Mon Entreprise",
+        "adresse": {
+            "num": 3,
+            "voie": "Rue de la paix",
+            "code_postale": "54234",
+            "ville": "Lyon",
+            "gps": {
+                "latitude": "75.7580",
+                "longitude": "1.8357"
+            }
+        }
+    }
+}

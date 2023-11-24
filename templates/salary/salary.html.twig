@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Détails de l'entreprise</h1>
+
+    <dl>
+        <dt>Nom Raison Sociale</dt>
+        <dd>{{ companyData.nom_raison_sociale }}</dd>
+
+        <dt>Siren</dt>
+        <dd>{{ companyData.siren }}</dd>
+
+        <dt>Siret</dt>
+        <dd>{{ companyData.siege['siret'] }}</dd>
+
+        <dt>Adresse</dt>
+        <dd>{{ companyData.siege['adresse'] }}</dd>
+    </dl>
+    <br>
+    <div class="flex-row mt-5 p-20 header-search ">
+        {{ form_start(salaryForm) }}
+        <div class="form-row">
+            {{ form_rest(salaryForm) }}
+        </div>
+        <button class="btn btn-primary">Calculer</button>
+        {{ form_end(salaryForm) }}
+    </div>
+
+    <div>
+        {% if response %}
+            <div>
+                <br>
+                {% if contract is same as('CDI') or contract is same as('apprentissage') %}
+                    <p class="mt-5">Salaire net : {{ response.netSalary | number_format(2, ',', '.') }} €</p>
+                    <br>
+                    <p>Cotisation salariale : {{ response.employee_dues | number_format(2, ',', '.') }} €</p>
+                    <br>
+                    <p>Cout total employeur : {{ response.total_employer_cost | number_format(2, ',', '.') }} €</p>
+                {% elseif contract is same as('CDD') %}
+                    <p>Cotisation salariale : {{ response.employee_dues | number_format(2, ',', '.') }} €</p>
+                    <br>
+                    <p>Cout total employeur : {{ response.total_employer_cost | number_format(2, ',', '.') }} €</p>
+                    <br>
+                    <p class="mt-5">Indemnité fin de contrat : {{ response.severance_pay | number_format(2, ',', '.') }} €</p>
+                {% elseif contract is same as('stage') %}
+                    <p>Gratification minimale salariale : {{ response.gratification | number_format(2, ',', '.') }} €</p>
+                {% endif %}
+
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

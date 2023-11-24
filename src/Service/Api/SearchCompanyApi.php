@@ -1,17 +1,37 @@
 <?php
 
 namespace App\Service\Api;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class SearchCompanyApi
 {
-    public function searchCompany(string $companyName, string $siren = null)
+    private HttpClientInterface $client;
+
+    public function __construct(HttpClientInterface $client)
     {
-        if (!is_file('txt/' . $siren . '.txt')) {
-            $gouvApi = $_ENV['SEARCH_COMPANY_GOUV_API'] . '?q=' . $companyName;
-            $response = file_get_contents($gouvApi);
-            $result = json_decode($response, true);
-            return $result["results"];
+        $this->client = $client;
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function searchCompany(string $companyName, int $page = 1): array | string
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                $_ENV['SEARCH_COMPANY_GOUV_API'] . '?q=' . $companyName. '&page='. $page,
+            );
+            $statusCode = $response->getStatusCode();
+            if ($statusCode != 200) {
+                throw new \Exception("Erreur lors de l'appel à l'API : statut $statusCode");
+            }
+            return json_decode($response->getContent(), true);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return $e->getMessage();
         }
-        return json_decode(file_get_contents('txt/' . $siren . '.txt'), true);
     }
 }
