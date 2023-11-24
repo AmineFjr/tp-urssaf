@@ -20,6 +20,12 @@ class Company
     #[ORM\Column(length: 255)]
     private ?string $siren = null;
 
+    #[ORM\Column(options: ['default' => 1])]
+    private ?int $page = 1;
+
+    #[ORM\Column (options: ['default' => 10])]
+    private ?int $per_page = null;
+
 
     public function getId(): ?int
     {
@@ -47,6 +53,30 @@ class Company
     public function setSiren(string $siren): static
     {
         $this->siren = $siren;
+
+        return $this;
+    }
+
+    public function getPage(): ?int
+    {
+        return $this->page;
+    }
+
+    public function setPage(int $page): static
+    {
+        $this->page = $page;
+
+        return $this;
+    }
+
+    public function getPerPage(): ?int
+    {
+        return $this->per_page;
+    }
+
+    public function setPerPage(int $per_page): static
+    {
+        $this->per_page = $per_page;
 
         return $this;
     }

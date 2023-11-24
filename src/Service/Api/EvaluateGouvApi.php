@@ -3,65 +3,45 @@
 namespace App\Service\Api;
 
 use Exception;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class EvaluateGouvApi
 {
+    private HttpClientInterface $client;
+
+    public function __construct(HttpClientInterface $client)
+    {
+        $this->client = $client;
+    }
     /**
-     * @throws Exception
+     * @throws TransportExceptionInterface
      */
     private function callApi($data): array
     {
-        $headers = array(
-            'Content-Type: application/json'
-        );
+        $url = $_ENV['EVALUATE_COMPANY_GOUV_API'];
 
-        $ch = curl_init($_ENV['EVALUATE_GOUV_URL']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        $response = $this->client->request('POST', $url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $data,
+        ]);
 
-        $response = curl_exec($ch);
+        $statusCode = $response->getStatusCode();
 
-        if ($response === false) {
-            throw new Exception('Curl error: ' . curl_error($ch));
+        if ($statusCode != 200) {
+            throw new \Exception("Erreur lors de l'appel à l'API : statut $statusCode");
         }
 
-        curl_close($ch);
-
-        $json = json_decode($response, true);
-
-        if (isset($json['situationError'])) {
-            throw new Exception($json['situationError']['message']);
-        }
-
-        return $json;
+        return json_decode($response->getContent(), true);
     }
+
 
     /**
      * @throws Exception
      */
-    public function salaireNetEnBrutMensuel($net): array
-    {
-        $data = array(
-            'situation' => array(
-                'salarié . rémunération . net . payé après impôt' => $net . ' €'
-            ),
-            'expressions' => array(
-                'salarié . contrat . salaire brut',
-                'salarié . coût total employeur'
-            )
-        );
-
-        $json = self::callApi($data);
-
-        return array($json['evaluate'][0]['nodeValue'], $json['evaluate'][1]['nodeValue']);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function salaireNetAvantImpot(int $brut): array
+    public function salaryNetPreTax(int $brut, string $contract): array
     {
         $data = array(
             'situation' => array(
@@ -69,21 +49,26 @@ class EvaluateGouvApi
                     "valeur" =>  $brut,
                     "unité" => "€ / mois"
                 ),
-                'salarié . contrat' => "'CDI'"
+                'salarié . contrat' => "'$contract'"
             ),
             'expressions' => array(
-                'salarié . coût total employeur',
-                'salarié . cotisations . salarié'
+                "salarié . rémunération . net . à payer avant impôt",
+                "salarié . cotisations . salarié",
+                "salarié . coût total employeur"
             )
         );
 
         $json = self::callApi($data);
 
-        return array($json['evaluate'][0]['nodeValue'], $json['evaluate'][1]['nodeValue']);
+        return array(
+            'netSalary' => $json['evaluate'][0]['nodeValue'],
+            'employee_dues' => $json['evaluate'][1]['nodeValue'],
+            'total_employer_cost' => $json['evaluate'][2]['nodeValue']);
     }
 
     /**
      * @throws Exception
+     * @throws TransportExceptionInterface
      */
     public function gratificationMinimStage($net): array
     {
@@ -93,7 +78,7 @@ class EvaluateGouvApi
                     "valeur" =>  $net,
                     "unité" => "€ / mois"
                 ),
-                'salarié . contrat' => "'CDI'"
+                'salarié . contrat' => "'stage'"
             ),
             'expressions' => array(
                 'salarié . contrat . stage . gratification minimale',
@@ -102,37 +87,15 @@ class EvaluateGouvApi
 
         $json = self::callApi($data);
 
-        return array($json['evaluate'][0]['nodeValue'], $json['evaluate'][1]['nodeValue']);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function salaireAlternant($net): array
-    {
-        $data = array(
-            'situation' => array(
-                'salarié . contrat . salaire brut' => array(
-                    "valeur" =>  $net,
-                    "unité" => "€ / mois"
-                ),
-                'salarié . contrat' => "'alternance'"
-            ),
-            'expressions' => array(
-                'salarié . coût total employeur',
-                'salarié . cotisations . salarié'
-            )
+        return array(
+            'gratification' => $json['evaluate'][0]['nodeValue']
         );
-
-        $json = self::callApi($data);
-
-        return array($json['evaluate'][0]['nodeValue'], $json['evaluate'][1]['nodeValue']);
     }
 
     /**
-     * @throws Exception
+     * @throws TransportExceptionInterface
      */
-    public function salaireCDD(string $brut): array
+    public function salaryNetPreTaxCddIndemnity(int $brut): array
     {
         $data = array(
             'situation' => array(
@@ -140,22 +103,22 @@ class EvaluateGouvApi
                     "valeur" =>  $brut,
                     "unité" => "€ / mois"
                 ),
-                'salarié . contrat' => "'CDD'",
-                'salarié . contrat . CDD . durée' => array(
-                    "valeur" =>  19,
-                    "unité" => "mois"
-                ),
+                'salarié . contrat' => "'stage'"
             ),
             'expressions' => array(
-                'salarié . coût total employeur',
-                'salarié . cotisations . salarié',
-                "salarié . contrat . CDD . indemnité de fin de contrat",
+                "salarié . cotisations . salarié",
+                "salarié . coût total employeur",
+                "salarié . contrat . CDD . indemnité de fin de contrat"
             )
         );
 
         $json = self::callApi($data);
 
-        return array($json['evaluate'][0]['nodeValue'], $json['evaluate'][1]['nodeValue']);
-    }
+        return array(
+            'employee_dues' => $json['evaluate'][0]['nodeValue'],
+            'total_employer_cost' => $json['evaluate'][1]['nodeValue'],
+            'severance_pay' => $json['evaluate'][2]['nodeValue'],
 
+        );
+    }
 }
